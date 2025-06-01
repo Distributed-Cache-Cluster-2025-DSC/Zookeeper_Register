@@ -1,0 +1,131 @@
+version: '3.8'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - cache-network
+
+  hashring-server:
+    image: mr8356/hashringserver:latest
+    container_name: hashring-server
+    depends_on:
+      - zookeeper
+    ports:
+      - "8080:8080"
+    environment:
+      ZOOKEEPER_CONNECTION: zookeeper:2181
+      SPRING_APPLICATION_NAME: hashring-service
+    networks:
+      - cache-network
+
+  memcached1:
+    image: memcached:1.6-alpine
+    container_name: memcached1
+    ports:
+      - "11211:11211"
+    networks:
+      - cache-network
+
+  memcached2:
+    image: memcached:1.6-alpine
+    container_name: memcached2
+    ports:
+      - "11212:11211"
+    networks:
+      - cache-network
+
+  memcached3:
+    image: memcached:1.6-alpine
+    container_name: memcached3
+    ports:
+      - "11213:11211"
+    networks:
+      - cache-network
+
+  memcached4:
+    image: memcached:1.6-alpine
+    container_name: memcached4
+    ports:
+      - "11214:11211"
+    networks:
+      - cache-network
+
+  registrar1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: registrar1
+    depends_on:
+      - zookeeper
+      - memcached1
+    environment:
+      ZOOKEEPER_CONNECTION: zookeeper:2181
+      NODE_ID: "node1"
+      MEMCACHED_HOST: memcached1      
+      MEMCACHED_PORT_ACTUAL: "11211"
+    networks:
+      - cache-network
+    restart: on-failure
+
+  registrar2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: registrar2
+    depends_on:
+      - zookeeper
+      - memcached2
+    environment:
+      ZOOKEEPER_CONNECTION: zookeeper:2181
+      NODE_ID: "node2"
+      MEMCACHED_HOST: memcached2
+      MEMCACHED_PORT_ACTUAL: "11211"
+    networks:
+      - cache-network
+    restart: on-failure
+
+  registrar3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: registrar3
+    depends_on:
+      - zookeeper
+      - memcached3
+    environment:
+      ZOOKEEPER_CONNECTION: zookeeper:2181
+      NODE_ID: "node3"
+      MEMCACHED_HOST: memcached3
+      MEMCACHED_PORT_ACTUAL: "11211"
+    networks:
+      - cache-network
+    restart: on-failure
+
+  registrar4:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: registrar4
+    depends_on:
+      - zookeeper
+      - memcached4
+    environment:
+      ZOOKEEPER_CONNECTION: zookeeper:2181
+      NODE_ID: "node4"
+      MEMCACHED_HOST: memcached4
+      MEMCACHED_PORT_ACTUAL: "11211"
+    networks:
+      - cache-network
+    restart: on-failure
+
+networks:
+  cache-network:
+    driver: bridge 
