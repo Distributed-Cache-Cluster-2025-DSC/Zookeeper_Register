@@ -1,8 +1,11 @@
 version: '3.8'
 
 services:
+  # ─────────────────────────────────────────────
+  # 1) ZooKeeper
+  # ─────────────────────────────────────────────
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
+    image: zookeeper:3.8.1
     hostname: zookeeper
     container_name: zookeeper
     ports:
@@ -13,19 +16,9 @@ services:
     networks:
       - cache-network
 
-  hashring-server:
-    image: mr8356/hashringserver:latest
-    container_name: hashring-server
-    depends_on:
-      - zookeeper
-    ports:
-      - "8080:8080"
-    environment:
-      ZOOKEEPER_CONNECTION: zookeeper:2181
-      SPRING_APPLICATION_NAME: hashring-service
-    networks:
-      - cache-network
-
+  # ─────────────────────────────────────────────
+  # 2) Memcached 인스턴스 4개
+  # ─────────────────────────────────────────────
   memcached1:
     image: memcached:1.6-alpine
     container_name: memcached1
@@ -58,74 +51,39 @@ services:
     networks:
       - cache-network
 
-  registrar1:
+  # ─────────────────────────────────────────────
+  # 3) zk-monitor (HealthChecker + ZkWatcher)
+  # ─────────────────────────────────────────────
+  zk-monitor:
     build:
-      context: .
+      context: .            # 이 디렉터리 안에 Dockerfile이 있어야 합니다.
       dockerfile: Dockerfile
-    container_name: registrar1
+    container_name: zk-monitor
     depends_on:
       - zookeeper
       - memcached1
-    environment:
-      ZOOKEEPER_CONNECTION: zookeeper:2181
-      NODE_ID: "node1"
-      MEMCACHED_HOST: memcached1      
-      MEMCACHED_PORT_ACTUAL: "11211"
-    networks:
-      - cache-network
-    restart: on-failure
-
-  registrar2:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: registrar2
-    depends_on:
-      - zookeeper
       - memcached2
-    environment:
-      ZOOKEEPER_CONNECTION: zookeeper:2181
-      NODE_ID: "node2"
-      MEMCACHED_HOST: memcached2
-      MEMCACHED_PORT_ACTUAL: "11211"
-    networks:
-      - cache-network
-    restart: on-failure
-
-  registrar3:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: registrar3
-    depends_on:
-      - zookeeper
       - memcached3
-    environment:
-      ZOOKEEPER_CONNECTION: zookeeper:2181
-      NODE_ID: "node3"
-      MEMCACHED_HOST: memcached3
-      MEMCACHED_PORT_ACTUAL: "11211"
-    networks:
-      - cache-network
-    restart: on-failure
-
-  registrar4:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: registrar4
-    depends_on:
-      - zookeeper
       - memcached4
     environment:
+      # 1) ZooKeeper 연결 정보
       ZOOKEEPER_CONNECTION: zookeeper:2181
-      NODE_ID: "node4"
-      MEMCACHED_HOST: memcached4
-      MEMCACHED_PORT_ACTUAL: "11211"
+
+      # 2) Spring Boot 서버 알림 엔드포인트
+      #    (실제 운영/테스트 환경에 맞춰 <SPRING_HOST>:<SPRING_PORT> 로 바꿔 주세요)
+      SPRING_NOTIFY_URL: http://<SPRING_HOST>:<SPRING_PORT>/zookeeper/nodeChange
+
+      # 3) Memcached 동기화 설정
+      MEMCACHED_BASE_NAME: memcached
+      MEMCACHED_COUNT: 4
+      MEMCACHED_PORT: 11211
+
+      # 4) HealthChecker 주기 (초 단위)
+      HEALTH_CHECK_INTERVAL: 10
     networks:
       - cache-network
     restart: on-failure
 
 networks:
   cache-network:
-    driver: bridge 
+    driver: bridge
