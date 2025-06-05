@@ -20,8 +20,7 @@ dependencies {
 }
 
 application {
-    mainClass = 'com.example.MemcachedNodeRegistrar'
-}
+    mainClass = 'com.example.zkmonitor.ZkMonitorApplication'}
 
 // shadowJar 설정 (선택적, 기본 설정으로도 잘 동작함)
 shadowJar {
