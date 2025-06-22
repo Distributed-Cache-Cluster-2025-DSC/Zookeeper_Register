@@ -99,7 +99,7 @@ public class MemcachedNodeRegistrar {
     private void registerNode() throws KeeperException, InterruptedException {
         ensureBasePath();
         String hostAddress = getHostAddress();
-        String nodeData = hostAddress + " (ID: " + this.nodeId + ")";
+//        String nodeData = hostAddress + " (ID: " + this.nodeId + ")";
         String specificNodePath = BASE_PATH + "/node-" + this.nodeId;
 
         if (zooKeeper.exists(specificNodePath, false) != null) {
@@ -113,11 +113,11 @@ public class MemcachedNodeRegistrar {
 
         currentNodePath = zooKeeper.create(
                 specificNodePath,
-                nodeData.getBytes(),
+                hostAddress.getBytes(),
                 ZooDefs.Ids.OPEN_ACL_UNSAFE,
                 CreateMode.EPHEMERAL
         );
-        System.out.println("Registered node: " + currentNodePath + " with data: " + nodeData);
+        System.out.println("Registered node: " + currentNodePath + " with data: " + hostAddress);
     }
 
     private void reconnect(String zkHost) {

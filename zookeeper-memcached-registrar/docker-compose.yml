@@ -12,17 +12,65 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     networks:
       - cache-network
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "localhost", "2181" ]
+      interval: 3s
+      timeout: 5s
+      retries: 10
 
-  hashring-server:
-    image: mr8356/hashringserver:latest
-    container_name: hashring-server
+  hashring-server1:
+    image: imscow11253/memcached_server:latest
+    container_name: hashring-server1
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     ports:
-      - "8080:8080"
+      - "8081:8080"
     environment:
       ZOOKEEPER_CONNECTION: zookeeper:2181
-      SPRING_APPLICATION_NAME: hashring-service
+      SPRING_APPLICATION_NAME: hashring-service1
+    networks:
+      - cache-network
+
+  hashring-server2:
+    image: imscow11253/memcached_server:latest
+    container_name: hashring-server2
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "8082:8080"
+    environment:
+      ZOOKEEPER_CONNECTION: zookeeper:2181
+      SPRING_APPLICATION_NAME: hashring-service2
+    networks:
+      - cache-network
+
+  hashring-server3:
+    image: imscow11253/memcached_server:latest
+    container_name: hashring-server3
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "8083:8080"
+    environment:
+      ZOOKEEPER_CONNECTION: zookeeper:2181
+      SPRING_APPLICATION_NAME: hashring-service3
+    networks:
+      - cache-network
+
+  hashring-server4:
+    image: imscow11253/memcached_server:latest
+    container_name: hashring-server4
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "8084:8080"
+    environment:
+      ZOOKEEPER_CONNECTION: zookeeper:2181
+      SPRING_APPLICATION_NAME: hashring-service4
     networks:
       - cache-network
 

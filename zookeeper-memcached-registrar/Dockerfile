@@ -21,7 +21,7 @@ COPY src ./src
 RUN gradle shadowJar --no-daemon --build-cache
 
 # 2단계: 작은 JRE 이미지를 기반으로 최종 이미지 생성
-FROM openjdk:17-jre-slim
+FROM openjdk:17
 
 WORKDIR /app
 
